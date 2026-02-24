@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finanz Dashboard</title>
+    <meta name="description"
+        content="Trading Dashboard mit Natural Language Processing für einfache Eingabe von Befehlen.">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+
+<body>
+    <div class="dashboard">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <h1 class="logo">Finanz<span class="logo-accent">Dashboard</span></h1>
+                <div class="search-container">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="tickerSearch" placeholder="Aktie oder Krypto suchen…" autocomplete="off">
+                    <div id="searchResults" class="search-results hidden"></div>
+                </div>
+            </div>
+            <div class="command-container">
+                <input type="text" id="command-bar" class="command-input"
+                    placeholder="AI Befehl (z.B. 'Filtere Tech Aktien mit KGV < 30')">
+                <button id="send-btn" class="action-btn">Ausführen</button>
+            </div>
+            <div class="header-actions">
+                <button id="settingsBtn" class="icon-btn" title="Einstellungen">⚙️</button>
+                <div class="status-indicator">
+                    <span id="userInfo" class="user-info">Gast</span>
+                    <span id="connectionStatus" class="status-dot green"></span>
+                    Live
+                </div>
+                <button id="logoutBtn" class="icon-btn hidden" title="Logout">🚪</button>
+            </div>
+        </header>
+
+        <!-- Market Overview Bar -->
+        <div class="market-ticker-bar" id="marketTickerBar">
+            <div class="ticker-scroll" id="tickerScroll">
+                <span class="loading-text">Lade Marktdaten…</span>
+            </div>
+        </div>
+
+        <!-- Main Grid -->
+        <div class="content-grid">
+            <!-- Left: Watchlist -->
+            <aside class="sidebar">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>📊 Watchlist</h3>
+                        <div class="watchlist-controls">
+                            <select id="watchlistSelect" class="select-mini"></select>
+                            <button id="addWatchlistBtn" class="btn-mini" title="Neue Watchlist">+</button>
+                        </div>
+                    </div>
+                    <div id="watchlist" class="list-container">
+                        <p class="empty-state">Suche eine Aktie und füge sie zur Watchlist hinzu.</p>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Center: Chart + Popular Stocks -->
+            <main class="main-area">
+                <div class="panel chart-panel">
+                    <div id="chart-container"></div>
+                </div>
+                <div class="panel" id="popularPanel">
+                    <div class="panel-header">
+                        <h3>🔥 Beliebt</h3>
+                    </div>
+                    <div id="popularStocks" class="stock-cards">
+                        <p class="empty-state">Lade…</p>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Right: Candidates / Filter Results -->
+            <aside class="right-panel">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h3>🎯 Kandidaten</h3>
+                    </div>
+                    <div id="candidates-list" class="list-container">
+                        <p class="empty-state">Nutze den AI Befehl, um Kandidaten zu finden.</p>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Bottom: Trade Log -->
+        <div class="panel bottom-panel">
+            <div class="panel-header">
+                <h3>📒 Trade Log</h3>
+            </div>
+            <table id="trade-log">
+                <thead>
+                    <tr>
+                        <th>Symbol</th>
+                        <th>Side</th>
+                        <th>Qty</th>
+                        <th>Entry</th>
+                        <th>Exit</th>
+                        <th>Fees</th>
+                        <th>P&L</th>
+                    </tr>
+                </thead>
+                <tbody id="trade-log-body">
+                    <tr>
+                        <td colspan="7" class="empty-state">Noch keine Trades.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal hidden">
+        <div class="modal-content">
+            <h2>⚙️ Einstellungen</h2>
+            <div class="input-group">
+                <label for="geminiKey">Gemini API Key</label>
+                <input type="password" id="geminiKey" placeholder="Dein API Key">
+            </div>
+            <div class="input-group">
+                <label for="dailyLimit">Tägliches NLP Limit</label>
+                <input type="number" id="dailyLimit" value="50">
+            </div>
+            <p id="apiUsageInfo">Nutzung heute: 0 / 50</p>
+            <div id="2faSection" class="settings-section hidden">
+                <h3>🔐 Zwei-Faktor-Authentisierung (2FA)</h3>
+                <p class="settings-hint">Sichern Sie Ihr Konto mit einer Authenticator-App.</p>
+                <div id="2faSetupContainer">
+                    <button id="setup2FABtn" class="btn-primary">2FA einrichten</button>
+                </div>
+                <div id="2faQRContainer" class="hidden">
+                    <p>Scannen Sie diesen Code:</p>
+                    <div id="qrcode"></div>
+                    <p class="secret-text">Geheimschlüssel: <span id="totpSecret"></span></p>
+                    <div class="input-group">
+                        <input type="text" id="totpVerifyCode" placeholder="6-stelliger Code">
+                        <button id="verify2FABtn" class="btn-primary">Verifizieren & Aktivieren</button>
+                    </div>
+                </div>
+                <div id="2faEnabledState" class="hidden">
+                    <p class="success-text">✅ 2FA ist für Ihr Konto aktiviert.</p>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button id="saveSettingsBtn" class="btn-primary">Speichern</button>
+                <button id="closeSettingsBtn" class="btn-secondary">Schließen</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Modal (Overlay) -->
+    <div id="auth-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2 id="auth-title">🔐 Login</h2>
+            <div id="auth-inputs">
+                <input type="text" id="username" placeholder="Username">
+                <input type="password" id="password" placeholder="Password">
+            </div>
+            <div id="2fa-login-section" class="hidden">
+                <p>Bitte 2FA Code eingeben:</p>
+                <input type="text" id="login-2fa-code" placeholder="6-stelliger Code">
+            </div>
+            <button id="login-btn" class="btn-primary">Login</button>
+            <p class="auth-hint" id="auth-toggle-text">Noch kein Konto? <a href="#" id="toggle-signup">Jetzt
+                    registrieren</a></p>
+            <p class="auth-hint">Oder einfach ohne Login die Marktdaten ansehen.</p>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
