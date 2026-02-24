@@ -7,6 +7,7 @@ Dashboard für die "Overnight Overreaction" Strategie.
 - **Sprachsteuerung**: NLP für intelligente Umwandlung von natürlicher Sprache in konkrete Filter.
 - **Sicherheit**: JWT Login und Google Authenticator (2FA) Support.
 - **Multi-Watchlists**: Organisiere deine Favoriten in verschiedenen Listen.
+- **Ideen & Strategien**: Multi-Tabbed Dashboard für quantitative Aktienanalysen (z.B. Dividenden-Studien, Abnormale Renditen).
 
 ## Setup
 1. Kopiere `.env.example` zu `.env` und trage deine Keys ein.

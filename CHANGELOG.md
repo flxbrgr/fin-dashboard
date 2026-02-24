@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [1.0.0] - 2026-02-24
 
 ### Added
+- Multi-Tab "Ideen & Strategien" Panel für quantitative Research-Analysen.
+- `IdeaAnalyst` Backend-Service für Dividenden-Studien und Ereignis-Analyse.
+- Interaktive Research-Tabellen mit Click-to-Chart Integration.
 - Initial project structure with FastAPI and Vanilla JS.
 - "Overnight Overreaction" strategy implementation (+/- 5% detection).
 - Integrated `yfinance` for free news fetching (News Traffic Light).

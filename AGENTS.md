@@ -11,6 +11,7 @@
     - `main.py`: Entry point and API routing
     - `models.py`: SQLModel schemas (User, Watchlist, Ticker, Trade)
     - `gemini_nlp.py`: Natural language command translation
+    - `idea_analyst.py`: Quantitative research and strategy service
     - `data_fetcher.py`: yfinance/Binance abstraction layer
 - `frontend/`: Vanilla web app
     - `index.html`: Dashboard layout
