@@ -1,11 +1,10 @@
-# FinDash - AI-Native Trading Dashboard
+# Lokales Dashboard für Watchlisten
 
-Premium Dashboard für die "Overnight Overreaction" Strategie.
+Dashboard für die "Overnight Overreaction" Strategie.
 
 ## Features
 - **Intelligente Suche**: Finde Aktien und Kryptos blitzschnell.
-- **Sprachsteuerung**: Führe Scans und Trades mit einfachen deutschen Befehlen aus.
-- **Strategie-Scanner**: Erkennt automatisch heftige Kursbewegungen (+/- 5%).
+- **Sprachsteuerung**: NLP für intelligente Umwandlung von natürlicher Sprache in konkrete Filter.
 - **Sicherheit**: JWT Login und Google Authenticator (2FA) Support.
 - **Multi-Watchlists**: Organisiere deine Favoriten in verschiedenen Listen.
 
