@@ -82,6 +82,18 @@ async def process_nlp_command(text: str, username: str = Depends(get_active_user
         fetcher = DataFetcher()
         filtered = await fetcher.filter_stocks(criteria)
         return {"action": "filter", "results": filtered}
+    elif action["action"] == "research":
+        from ..idea_analyst import IdeaAnalyst
+        analyst = IdeaAnalyst()
+        results = await analyst.analyze(
+            action.get("hypothesis"), 
+            action.get("suggested_symbols", [])
+        )
+        return {
+            "action": "research", 
+            "title": action.get("title", "Research"),
+            "results": results
+        }
         
     return {"error": "Unknown action"}
 

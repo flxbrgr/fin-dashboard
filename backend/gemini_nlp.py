@@ -34,7 +34,7 @@ class GeminiNLP:
         - Sektor/Branche: 'sector' (z.B. 'Technology', 'Financial Services', 'Healthcare')
         - Preis: 'current_price'
 
-        Mögliche Aktionen: 'scan', 'trade', 'status', 'filter'.
+        Mögliche Aktionen: 'scan', 'trade', 'status', 'filter', 'research'.
 
         Befehl: "{text}"
 
@@ -43,7 +43,8 @@ class GeminiNLP:
         - "Kauf 10 AAPL": {{"action": "trade", "symbol": "AAPL", "side": "buy", "quantity": 10}}
         - "Status meiner Trades": {{"action": "status"}}
         - "Filtere Tech Aktien mit KGV unter 25 und Dividende über 2%": {{"action": "filter", "criteria": {{"sector": "Technology", "trailing_pe_max": 25, "dividend_yield_min": 0.02}}}}
-        - "Suche großkapitalisierte Firmen (über 500 Mrd) mit KBV < 3": {{"action": "filter", "criteria": {{"market_cap_min": 500000000000, "price_to_book_max": 3}}}}
+        - "Ich möchte testen ob Dividenden-Aktien weniger Schwankungen haben": {{"action": "research", "title": "Dividende vs Volatilität", "suggested_symbols": ["JNJ", "PG", "KO", "PEP", "XOM"], "hypothesis": "high_div_low_vol"}}
+        - "Abnormal returns after div-ex?": {{"action": "research", "title": "Abnormale Renditen (Ex-Div)", "suggested_symbols": ["AAPL", "T", "VZ", "MAIN"], "hypothesis": "ex_div_returns"}}
 
         Antworte NUR mit dem JSON.
         """

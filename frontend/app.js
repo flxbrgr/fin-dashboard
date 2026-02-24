@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setupEventListeners();
     loadMarketOverview();
     updateUserUI();
+    IdeaManager.init();
     if (jwtToken) {
         fetchWatchlists();
     }
@@ -526,31 +527,7 @@ function selectWatchlist(id) {
     fetchDashboardData();
 }
 
-// --- Auth ---
-async function login() {
-    const user = document.getElementById('username').value;
-    const pass = document.getElementById('password').value;
-    const formData = new FormData();
-    formData.append('username', user);
-    formData.append('password', pass);
-    const res = await fetch(`${API_URL}/token`, { method: 'POST', body: formData });
-    const data = await res.json();
-    if (data.require_2fa) {
-        const code = prompt("Bitte 2FA Code eingeben:");
-        const verifyRes = await fetch(`${API_URL}/2fa/verify?username=${user}&code=${code}`, { method: 'POST' });
-        const verifyData = await verifyRes.json();
-        if (verifyData.access_token) saveToken(verifyData.access_token);
-    } else if (data.access_token) {
-        saveToken(data.access_token);
-    }
-}
 
-function saveToken(token) {
-    localStorage.setItem('jwt', token);
-    jwtToken = token;
-    document.getElementById('auth-modal').classList.add('hidden');
-    fetchWatchlists();
-}
 
 // --- Dashboard Data ---
 async function fetchDashboardData() {
@@ -568,6 +545,92 @@ async function fetchDashboardData() {
     } catch (e) { console.error('Dashboard data error:', e); }
 }
 
+// --- Idea & Strategy Management ---
+const IdeaManager = {
+    tabs: [],
+    activeTabId: null,
+
+    init() {
+        this.tabsContainer = document.getElementById('ideasTabs');
+        this.contentContainer = document.getElementById('ideasContent');
+    },
+
+    addTab(title, results) {
+        const id = 'tab-' + Date.now();
+        const tab = { id, title, results };
+        this.tabs.push(tab);
+        this.renderTabs();
+        this.selectTab(id);
+    },
+
+    removeTab(id, e) {
+        if (e) e.stopPropagation();
+        this.tabs = this.tabs.filter(t => t.id !== id);
+        if (this.activeTabId === id) {
+            this.activeTabId = this.tabs.length > 0 ? this.tabs[this.tabs.length - 1].id : null;
+        }
+        this.renderTabs();
+        this.renderContent();
+    },
+
+    selectTab(id) {
+        this.activeTabId = id;
+        this.renderTabs();
+        this.renderContent();
+    },
+
+    renderTabs() {
+        if (!this.tabsContainer) return;
+        if (this.tabs.length === 0) {
+            this.tabsContainer.innerHTML = '';
+            return;
+        }
+        this.tabsContainer.innerHTML = this.tabs.map(t => `
+            <div class="tab-item ${t.id === this.activeTabId ? 'active' : ''}" onclick="IdeaManager.selectTab('${t.id}')">
+                <span>${t.title}</span>
+                <span class="tab-close" onclick="IdeaManager.removeTab('${t.id}', event)">×</span>
+            </div>
+        `).join('');
+    },
+
+    renderContent() {
+        if (!this.contentContainer) return;
+        const activeTab = this.tabs.find(t => t.id === this.activeTabId);
+        if (!activeTab) {
+            this.contentContainer.innerHTML = '<p class="empty-state">Frage die AI nach einer Strategie oder Analyse.</p>';
+            return;
+        }
+
+        const { results } = activeTab;
+        let html = `<div class="research-summary">${results.summary}</div>`;
+
+        if (results.data && results.data.length > 0) {
+            html += `<table class="research-table">
+                <thead>
+                    <tr>
+                        ${results.columns.map(c => `<th>${c.label}</th>`).join('')}
+                    </tr>
+                </thead>
+                <tbody>
+                    ${results.data.map(row => `
+                        <tr onclick="loadChartForSymbol('${row.symbol}')">
+                            ${results.columns.map(c => {
+                const val = row[c.key];
+                const cls = c.key === 'symbol' ? 'symbol' : '';
+                return `<td class="${cls}">${val !== null ? val : 'N/A'}</td>`;
+            }).join('')}
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>`;
+        } else {
+            html += '<p class="empty-state">Keine Daten für diese Analyse gefunden.</p>';
+        }
+
+        this.contentContainer.innerHTML = html;
+    }
+};
+
 async function executeCommand() {
     const input = document.getElementById('command-bar');
     const cmd = input.value;
@@ -584,7 +647,11 @@ async function executeCommand() {
             return;
         }
 
-        if (data.action === 'filter' && data.results) {
+        const data = await res.json();
+
+        if (data.action === 'research') {
+            IdeaManager.addTab(data.title, data.results);
+        } else if (data.action === 'filter' && data.results) {
             renderFilterResults(data.results);
         } else if (Array.isArray(data)) {
             updateCandidates(data);
@@ -595,19 +662,13 @@ async function executeCommand() {
             alert('Fehler: ' + data.error);
         }
     } catch (e) {
-        if (e.message.includes('401')) {
-            const code = prompt("Gesperrt! Bitte 2FA/Master Code eingeben:");
-            if (code) {
-                localStorage.setItem('totp_code', code);
-                totpCode = code;
-                alert("Master Code gespeichert. Bitte Befehl erneut senden.");
-            }
-        } else {
-            alert('Befehl fehlgeschlagen. Bist du eingeloggt?');
-        }
+        console.error('Command execution error:', e);
+        alert('Befehl fehlgeschlagen. Bist du eingeloggt?');
     }
     input.value = '';
 }
+
+
 
 // --- Render Functions ---
 function updateWatchlist(tickers) {
